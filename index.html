@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .card-header i {
+            margin-right: 0.75rem;
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-light);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background-color: var(--light);
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .blog-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .blog-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .blog-header {
+            padding: 1.25rem 1.25rem 0.75rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .blog-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-content {
+            padding: 1.25rem;
+            flex-grow: 1;
+            color: var(--gray);
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-actions {
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--gray-light);
+            background-color: #f8fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--gray-light);
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-container {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: 1px solid var(--gray-light);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .close-btn:hover {
+            color: var(--dark);
+        }
+
+        .notification {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            background-color: var(--secondary);
+        }
+
+        .notification-error {
+            background-color: var(--danger);
+        }
+
+        .notification-warning {
+            background-color: var(--warning);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .blog-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Blog Manager</h1>
+            <p>Create, edit and manage your blog posts with ease</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-plus-circle"></i>
+                <h2>Create New Blog</h2>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="title">Blog Title</label>
+                <input type="text" id="title" class="form-input" placeholder="Enter a catchy title...">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="content">Blog Content</label>
+                <textarea id="content" class="form-textarea" placeholder="Write your blog content here..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="createBlog()">
+                <i class="fas fa-plus"></i> Create Blog
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i>
+                <h2>All Blogs</h2>
+            </div>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search" class="search-input" placeholder="Search blogs...">
+            </div>
+            
+            <div id="blogs" class="blog-list">
+                <!-- Blogs will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Blog</h3>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editTitle">Blog Title</label>
+                <input type="text" id="editTitle" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editContent">Blog Content</label>
+                <textarea id="editContent" class="form-textarea"></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button class="btn" onclick="closeEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="updateBlog()">
+                    <i class="fas fa-save"></i> Update Blog
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-text">Blog created successfully!</span>
+    </div>
+
+    <script>
+        // const API_URL = 'http://127.0.0.1:8000/api/list_create/';
+        // const DETAIL_URL = 'http://127.0.0.1:8000/api/detail/';
+        const API_URL = 'http://127.0.0.1:8000/api/blogs/';
+        const DETAIL_URL = 'http://127.0.0.1:8000/api/blogs/';
+        let currentEditId = null;
+
+        // Fetch all blogs
+        async function fetchBlogs() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                displayBlogs(data);
+            } catch (error) {
+                console.error('Error fetching blogs:', error);
+                showNotification('Error fetching blogs', 'error');
+            }
+        }
+
+        // Display blogs in the UI
+        function displayBlogs(blogs) {
+            const blogsDiv = document.getElementById('blogs');
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            
+            // Filter blogs based on search term
+            const filteredBlogs = blogs.filter(blog => 
+                blog.title.toLowerCase().includes(searchTerm) || 
+                blog.content.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredBlogs.length === 0) {
+                blogsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>No blogs found</h3>
+                        <p>${searchTerm ? 'Try adjusting your search terms' : 'Create your first blog to get started'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            blogsDiv.innerHTML = '';
+            filteredBlogs.forEach(blog => {
+                const blogEl = document.createElement('div');
+                blogEl.className = 'blog-card';
+                blogEl.innerHTML = `
+                    <div class="blog-header">
+                        <h3 class="blog-title">${blog.title}</h3>
+                    </div>
+                    <div class="blog-content">${blog.content}</div>
+                    <div class="blog-actions">
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${blog.id}, '${blog.title.replace(/'/g, "\\'")}', '${blog.content.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteBlog(${blog.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                blogsDiv.appendChild(blogEl);
+            });
+        }
+
+        // Create a new blog
+        async function createBlog() {
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            
+            if(!title || !content) { 
+                showNotification('Please fill all fields', 'warning');
+                return; 
+            }
+
+            const createBtn = document.querySelector('.btn-primary');
+            const originalText = createBtn.innerHTML;
+            createBtn.innerHTML = '<div class="loading"></div> Creating...';
+            createBtn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({title, content})
+                });
+                
+                if(response.ok) {
+                    document.getElementById('title').value = '';
+                    document.getElementById('content').value = '';
+                    fetchBlogs();
+                    showNotification('Blog created successfully!', 'success');
+                } else {
+                    const err = await response.json();
+                    showNotification('Error: ' + JSON.stringify(err), 'error');
+                }
+            } catch (error) {
+                console.error('Error creating blog:', error);
+                showNotification('Error creating blog', 'error');
+            } finally {
+                createBtn.innerHTML = originalText;
+                createBtn.disabled = false;
+            }
+        }
+
+        // Delete a blog
+        async function deleteBlog(id) {
+            if(confirm('Are you sure you want to delete this blog?')) {
+                try {
+                    const response = await fetch(`${DETAIL_URL}${id}/`, { method: 'DELETE' });
+                    if(response.ok) {
+                        fetchBlogs();
+                        showNotification('Blog deleted successfully!', 'success');
+                    } else {
+                        showNotification('Error deleting blog', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting blog:', error);
+                    showNotification('Error deleting blog', 'error');
+                }
+            }
+        }
+
+        // Open edit modal
+        function openEditModal(id, title, content) {
+            currentEditId = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editContent').value = content.replace(/\\n/g, '\n');
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditId = null;
+        }
+
+        // Update blog
+        async function updateBlog() {
+            const title = document.getElementById('editTitle').value;
+            const content = document.getElementById('editContent').value;
+            
+            if(!title || !content) { 
+                showNotification('Please fill all fields', 'warning');
+                return; 
+            }
+
+            const updateBtn = document.querySelector('.btn-primary');
+            const originalText = updateBtn.innerHTML;
+            updateBtn.innerHTML = '<div class="loading"></div> Updating...';
+            updateBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${DETAIL_URL}${currentEditId}/`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({title, content})
+                });
+                
+                if(response.ok) {
+                    fetchBlogs();
+                    closeEditModal();
+                    showNotification('Blog updated successfully!', 'success');
+                } else {
+                    showNotification('Error updating blog', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating blog:', error);
+                showNotification('Error updating blog', 'error');
+            } finally {
+                updateBtn.innerHTML = originalText;
+                updateBtn.disabled = false;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            notificationText.textContent = message;
+            notification.className = 'notification';
+            
+            switch(type) {
+                case 'success':
+                    notification.classList.add('notification-success');
+                    break;
+                case 'error':
+                    notification.classList.add('notification-error');
+                    break;
+                case 'warning':
+                    notification.classList.add('notification-warning');
+                    break;
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Search functionality
+        document.getElementById('search').addEventListener('input', fetchBlogs);
+
+        // Initial fetch
+        fetchBlogs();
+    </script>
+</body>
+</html>
