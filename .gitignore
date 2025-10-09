@@ -1,3 +1,8 @@
 # Ignore .env files at all levels
 **/.env
 venv/
+
+.venv/
+
+**/.venv
+**/venv
