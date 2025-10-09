@@ -27,6 +27,7 @@ DEBUG = True
 import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/'
+# MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'uploads'
 
 ALLOWED_HOSTS = ['*']
@@ -57,6 +58,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # ✅ shows the upload form
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',  # ✅ required for file upload
+    ],
+}
 
 ROOT_URLCONF = 'Ingestion.urls'
 CORS_ALLOW_ALL_ORIGINS = True
