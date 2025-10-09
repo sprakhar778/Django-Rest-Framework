@@ -1,3 +1,4 @@
 # Ignore __pycache__ directories at any level
 */__pycache__/
 venv/
+.env/
