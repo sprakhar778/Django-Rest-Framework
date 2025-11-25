@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Content Studio</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=typography,forms"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.0.0/dist/markdown-it.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+
+  <style>
+    /* Custom Blinking Cursor */
+    .typing-active::after {
+      content: '▋';
+      display: inline-block;
+      margin-left: 2px;
+      color: #0ea5e9; /* Sky 500 */
+      animation: blink 1s step-end infinite;
+      vertical-align: baseline;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Smooth transitions for tabs */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Custom Scrollbar for code blocks */
+    pre::-webkit-scrollbar { height: 8px; }
+    pre::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    pre::-webkit-scrollbar-track { background: #1e293b; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 p-4 md:p-8">
+
+<main class="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-1 space-y-6">
+    <div class="bg-white shadow-sm border border-slate-200 rounded-xl p-6 sticky top-6">
+      <header class="mb-6">
+        <div class="flex items-center gap-2 text-sky-600 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <h1 class="text-xl font-bold tracking-tight text-slate-900">AI Content Studio</h1>
+        </div>
+        <p class="text-sm text-slate-500">Stream high-quality markdown content in real-time.</p>
+      </header>
+
+      <form id="postForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Topic / Title</label>
+          <input id="titleInput" required type="text"
+            class="w-full rounded-lg border-slate-300 focus:border-sky-500 focus:ring-sky-500 sm:text-sm transition-shadow shadow-sm"
+            placeholder="e.g., How to use Rust for WebDev"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tone</label>
+            <select id="toneSelect" class="w-full rounded-lg border-slate-300 text-sm focus:ring-sky-500">
+              <option value="professional">Professional</option>
+              <option value="casual">Casual</option>
+              <option value="enthusiastic">Enthusiastic</option>
+              <option value="witty">Witty</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Length</label>
+            <select id="lengthSelect" class="w-full rounded-lg border-slate-300 text-sm focus:ring-sky-500">
+              <option value="short">Short (~300w)</option>
+              <option value="medium" selected>Medium (~600w)</option>
+              <option value="long">Long (1k+)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 my-4"></div>
+
+        <div class="flex flex-col gap-2">
+          <button type="submit" id="submitBtn"
+            class="w-full justify-center inline-flex items-center px-4 py-2.5 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4 mr-2 animate-none" id="btnSpinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <span>Generate Stream</span>
+          </button>
+          
+          <button type="button" id="simulateBtn"
+            class="w-full justify-center inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-xs font-medium hover:bg-slate-50">
+            Simulate Stream (Demo)
+          </button>
+
+          <button type="button" id="stopBtn" disabled
+            class="w-full justify-center inline-flex items-center px-4 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 text-sm font-medium hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            Stop Generation
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span id="statusDot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+          <span id="statusText" class="text-slate-500 font-medium">Ready</span>
+        </div>
+        <span id="wordCount" class="text-slate-400">0 words</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lg:col-span-2 h-full flex flex-col bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden min-h-[600px]">
+    
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+      <div class="flex space-x-1 bg-slate-200/60 p-1 rounded-lg">
+        <button onclick="switchTab('preview')" id="tab-preview" class="px-3 py-1 text-xs font-medium rounded-md bg-white text-slate-700 shadow-sm transition-all">Preview</button>
+        <button onclick="switchTab('markdown')" id="tab-markdown" class="px-3 py-1 text-xs font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all">Markdown</button>
+        <button onclick="switchTab('html')" id="tab-html" class="px-3 py-1 text-xs font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all">HTML</button>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button id="copyBtn" class="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors" title="Copy to Clipboard">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+        </button>
+        <button id="clearBtn" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors" title="Clear">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative flex-1 overflow-hidden bg-white group">
+      
+      <div id="view-preview" class="tab-content active h-full overflow-y-auto p-8 scroll-smooth">
+        <article id="output-preview" class="prose prose-slate prose-headings:font-bold prose-a:text-sky-600 max-w-none">
+          <div class="text-slate-400 text-center mt-20 italic select-none">
+            AI content will appear here...
+          </div>
+        </article>
+        <div id="scroll-anchor"></div>
+      </div>
+
+      <div id="view-markdown" class="tab-content h-full overflow-y-auto bg-slate-900 text-slate-200 p-6 font-mono text-sm">
+        <pre class="whitespace-pre-wrap break-words"><code id="output-markdown"></code></pre>
+      </div>
+
+      <div id="view-html" class="tab-content h-full overflow-y-auto bg-slate-50 p-6 font-mono text-xs text-slate-600">
+        <pre class="whitespace-pre-wrap break-words"><code id="output-html"></code></pre>
+      </div>
+
+      <button id="autoScrollBtn" class="absolute bottom-4 right-6 bg-sky-600 text-white p-2 rounded-full shadow-lg hidden hover:bg-sky-700 transition-all z-10">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+      </button>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // --- Configuration & Init ---
+  const md = window.markdownit({
+    html: false, // Security: disable HTML tags in source
+    breaks: true,
+    linkify: true,
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return `<pre class="hljs p-4 rounded-md !bg-slate-800 text-sm shadow-inner"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+        } catch (__) {}
+      }
+      // Fallback for unknown languages or no language
+      return `<pre class="hljs p-4 rounded-md !bg-slate-800 text-sm shadow-inner"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+    }
+  });
+
+  // --- DOM Elements ---
+  const els = {
+    form: document.getElementById('postForm'),
+    title: document.getElementById('titleInput'),
+    submitBtn: document.getElementById('submitBtn'),
+    simulateBtn: document.getElementById('simulateBtn'),
+    stopBtn: document.getElementById('stopBtn'),
+    spinner: document.getElementById('btnSpinner'),
+    
+    statusText: document.getElementById('statusText'),
+    statusDot: document.getElementById('statusDot'),
+    wordCount: document.getElementById('wordCount'),
+    
+    preview: document.getElementById('output-preview'),
+    markdown: document.getElementById('output-markdown'),
+    html: document.getElementById('output-html'),
+    
+    container: document.getElementById('view-preview'),
+    scrollAnchor: document.getElementById('scroll-anchor'),
+    autoScrollBtn: document.getElementById('autoScrollBtn'),
+    
+    copyBtn: document.getElementById('copyBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+  };
+
+  // --- State ---
+  let state = {
+    controller: null,
+    rawText: "",
+    isStreaming: false,
+    autoScroll: true,
+    currentTab: 'preview'
+  };
+
+  // --- Tabs Logic ---
+  window.switchTab = (tab) => {
+    state.currentTab = tab;
+    
+    // Hide all, Remove active class from buttons
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    ['preview', 'markdown', 'html'].forEach(t => {
+      const btn = document.getElementById(`tab-${t}`);
+      if(t === tab) {
+        btn.classList.remove('text-slate-500', 'bg-transparent');
+        btn.classList.add('bg-white', 'text-slate-700', 'shadow-sm');
+      } else {
+        btn.classList.add('text-slate-500', 'bg-transparent');
+        btn.classList.remove('bg-white', 'text-slate-700', 'shadow-sm');
+      }
+    });
+
+    // Show target
+    document.getElementById(`view-${tab}`).classList.add('active');
+  };
+
+  // --- Rendering Logic ---
+  function updateContent(newText) {
+    state.rawText = newText;
+
+    // 1. Render Markdown
+    const renderedHTML = DOMPurify.sanitize(md.render(state.rawText));
+
+    // 2. Update DOM
+    els.preview.innerHTML = renderedHTML || '<div class="text-slate-400 text-center mt-20 italic select-none">AI content will appear here...</div>';
+    
+    if(state.isStreaming) {
+      els.preview.classList.add('typing-active');
+    } else {
+      els.preview.classList.remove('typing-active');
+    }
+
+    // 3. Update other tabs
+    els.markdown.textContent = state.rawText;
+    els.html.textContent = renderedHTML;
+
+    // 4. Update stats
+    const words = state.rawText.trim() ? state.rawText.trim().split(/\s+/).length : 0;
+    els.wordCount.textContent = `${words} words`;
+
+    // 5. Scroll Handling
+    handleScroll();
+  }
+
+  function handleScroll() {
+    if (state.autoScroll && state.currentTab === 'preview') {
+      els.scrollAnchor.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }
+
+  // Detect user manual scrolling to disable auto-scroll
+  els.container.addEventListener('scroll', () => {
+    const distanceToBottom = els.container.scrollHeight - els.container.scrollTop - els.container.clientHeight;
+    
+    // If user scrolls up significantly, disable auto-scroll
+    if (distanceToBottom > 100) {
+      state.autoScroll = false;
+      els.autoScrollBtn.classList.remove('hidden');
+    } else {
+      state.autoScroll = true;
+      els.autoScrollBtn.classList.add('hidden');
+    }
+  });
+
+  // Re-enable auto-scroll via button
+  els.autoScrollBtn.onclick = () => {
+    state.autoScroll = true;
+    els.autoScrollBtn.classList.add('hidden');
+    handleScroll();
+  };
+
+  // --- Life Cycle UI Updates ---
+  function setStatus(mode) {
+    if (mode === 'idle') {
+      state.isStreaming = false;
+      els.statusText.textContent = "Idle";
+      els.statusText.className = "text-slate-500 font-medium";
+      els.statusDot.className = "w-2 h-2 rounded-full bg-slate-300";
+      els.submitBtn.disabled = false;
+      els.stopBtn.disabled = true;
+      els.simulateBtn.disabled = false;
+      els.spinner.classList.remove('animate-spin');
+      els.preview.classList.remove('typing-active');
+    } else if (mode === 'loading') {
+      state.isStreaming = true;
+      state.rawText = "";
+      state.autoScroll = true; // Reset scroll lock on new run
+      updateContent("");
+      
+      els.statusText.textContent = "Connecting...";
+      els.statusText.className = "text-sky-600 font-medium animate-pulse";
+      els.statusDot.className = "w-2 h-2 rounded-full bg-sky-500 animate-ping";
+      els.submitBtn.disabled = true;
+      els.simulateBtn.disabled = true;
+      els.stopBtn.disabled = false;
+      els.spinner.classList.add('animate-spin');
+    } else if (mode === 'streaming') {
+      els.statusText.textContent = "Generating...";
+    }
+  }
+
+  // --- API & Streaming ---
+  async function startStream(isSimulation = false) {
+    setStatus('loading');
+    state.controller = new AbortController();
+
+    try {
+      let reader;
+
+      if (isSimulation) {
+        // Simulation Generator
+        reader = getSimulationStream();
+      } else {
+        // Real Fetch
+        const payload = {
+          title: els.title.value,
+          tone: document.getElementById('toneSelect').value,
+          length: document.getElementById('lengthSelect').value
+        };
+
+        const response = await fetch("http://127.0.0.1:8000/api/posts/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: state.controller.signal
+        });
+
+        if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+        reader = response.body.getReader();
+      }
+
+      setStatus('streaming');
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        const chunk = typeof value === 'string' ? value : decoder.decode(value, { stream: true });
+        state.rawText += chunk;
+        
+        // Throttle updates slightly for performance if needed, 
+        // but direct updates usually fine for text
+        updateContent(state.rawText);
+      }
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        els.statusText.textContent = "Stopped by user";
+      } else {
+        console.error(err);
+        els.statusText.textContent = "Error occurred";
+        els.statusText.className = "text-rose-600 font-medium";
+        els.statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
+        els.preview.innerHTML += `<div class="mt-4 p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded text-sm"><strong>Error:</strong> ${err.message}</div>`;
+      }
+    } finally {
+      setStatus('idle');
+      state.controller = null;
+    }
+  }
+
+  // --- Event Listeners ---
+  els.form.onsubmit = (e) => {
+    e.preventDefault();
+    startStream(false);
+  };
+
+  els.simulateBtn.onclick = () => {
+    // Fill dummy title if empty
+    if(!els.title.value) els.title.value = "The Future of AI Coding";
+    startStream(true);
+  };
+
+  els.stopBtn.onclick = () => {
+    if (state.controller) state.controller.abort();
+  };
+
+  els.clearBtn.onclick = () => {
+    if(state.isStreaming) return;
+    state.rawText = "";
+    els.title.value = "";
+    updateContent("");
+  };
+
+  els.copyBtn.onclick = async () => {
+    const textToCopy = state.currentTab === 'preview' ? els.preview.innerText : 
+                       state.currentTab === 'html' ? els.html.textContent : 
+                       state.rawText;
+    
+    if(!textToCopy) return;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      const originalIcon = els.copyBtn.innerHTML;
+      els.copyBtn.innerHTML = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+      setTimeout(() => els.copyBtn.innerHTML = originalIcon, 1500);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
+
+  // --- Simulation Helper (Mock Data) ---
+  function getSimulationStream() {
+    const mockContent = `
+# The Future of AI Development
+
+Artificial Intelligence is reshaping how we build software. From **code generation** to automated testing, the landscape is changing rapidly.
+
+## Key Benefits
+
+1. **Speed**: Boilerplate code is generated in seconds.
+2. **Learning**: Beginners can understand complex patterns.
+3. **Optimization**: AI can suggest refactors.
+
+> "AI won't replace developers, but developers using AI will replace those who don't."
+
+### Code Example
+Here is a simple Python example using a transformer library:
+
+\`\`\`python
+import torch
+from transformers import pipeline
+
+def analyze_sentiment(text):
+    classifier = pipeline("sentiment-analysis")
+    result = classifier(text)
+    return result
+
+print(analyze_sentiment("I love coding with AI!"))
+\`\`\`
+
+### Conclusion
+Embrace the tools, but keep your fundamentals strong. The future is bright!
+    `;
+
+    const chunks = mockContent.split(/(?=[ \n])/); // Split by space or newline to simulate chunks
+    let index = 0;
+    
+    return {
+      async read() {
+        if (index >= chunks.length) return { done: true, value: undefined };
+        
+        // Simulate network delay
+        await new Promise(r => setTimeout(r, 30 + Math.random() * 50));
+        
+        const chunk = chunks[index++];
+        return { done: false, value: chunk };
+      }
+    };
+  }
+</script>
+</body>
+</html> 

@@ -10,12 +10,6 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
-
-
-
-
-
-
 class UploadFileView(ModelViewSet):
     queryset = UploadFile.objects.all()
     serializer_class = UploadFileSerializer 
@@ -27,9 +21,7 @@ class UploadFileView(ModelViewSet):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response({"message":"File uploaded successfully"},status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-        
+     
         uploaded_file=self.get_object()
         path=uploaded_file.file.path
         ext = path.lower().split('.')[-1]
@@ -39,17 +31,17 @@ class UploadFileView(ModelViewSet):
         else:
             return Response({"error": "Not an image"}, status=400)
     
-    @action(detail=True, methods=['get'])
-    def summary(self,request,pk=None):
-        uploaded_file=self.get_object()
-        path=uploaded_file.file.path
-        ext = path.lower().split('.')[-1]
-        if ext in ['jpg', 'jpeg', 'png']:
-            desc = describe_image_with_groq(path)
-            uploaded_file.description=desc
-            uploaded_file.save()
-        else:
-            return Response({"error": "Not an image"}, status=400)
+    # @action(detail=True, methods=['get'])
+    # def summary(self,request,pk=None):
+    #     uploaded_file=self.get_object()
+    #     path=uploaded_file.file.path
+    #     ext = path.lower().split('.')[-1]
+    #     if ext in ['jpg', 'jpeg', 'png']:
+    #         desc = describe_image_with_groq(path)
+    #         uploaded_file.description=desc
+    #         uploaded_file.save()
+    #     else:
+    #         return Response({"error": "Not an image"}, status=400)
       
      
 
